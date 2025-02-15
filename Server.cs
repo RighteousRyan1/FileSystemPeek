@@ -49,27 +49,57 @@ public class Server {
 
         // stop crashing out
         switch (packet) {
-            case Packet.REQ_FOLDER:
+            case Packet.SEND_STR:
+                var str = reader.GetString();
+                writer.Put(str);
+
+                netManager.SendToAll(writer, deliveryMethod, peer);
+                break;
+            case Packet.REQ_S_FOLDER:
                 var specialPath = (Environment.SpecialFolder)reader.GetByte();
 
                 writer.Put((byte)specialPath);
 
                 netManager.SendToAll(writer, deliveryMethod, peer);
                 break;
-            case Packet.SEND_FOLDER:
+            case Packet.SEND_S_FOLDER:
                 var folder = reader.DeserializeFolder();
 
                 writer.Serialize(folder);
 
                 netManager.SendToAll(writer, deliveryMethod, peer);
                 break;
-            case Packet.TEST:
-                var num = reader.GetInt();
+            case Packet.REQ_FILE:
+                var file = reader.GetString();
+                writer.Put(file);
 
-                writer.Put(num);
+                netManager.SendToAll(writer, deliveryMethod, peer);
+                break;
+            case Packet.SEND_FILE:
+                byte[] bytes = [];
+                reader.GetBytes(bytes, Packet.MAX_PACKET_CAPACITY);
 
-                // send it back to us
-                netManager.SendToAll(writer, deliveryMethod);
+                writer.Put(bytes);
+
+                bool terminate = reader.GetBool();
+
+                writer.Put(terminate);
+
+                netManager.SendToAll(writer, deliveryMethod, peer);
+                break;
+            case Packet.REQ_FOLDER:
+                var path = reader.GetString();
+
+                writer.Put(path);
+
+                netManager.SendToAll(writer, deliveryMethod, peer);
+                break;
+            case Packet.SEND_FOLDER:
+                var sentFolder = reader.DeserializeFolder();
+
+                writer.Serialize(sentFolder);
+
+                netManager.SendToAll(writer, deliveryMethod, peer);
                 break;
         }
     }

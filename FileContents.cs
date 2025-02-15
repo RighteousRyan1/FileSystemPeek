@@ -7,12 +7,14 @@ public class FileContents {
     public byte[] AsBytes;
     public string[] AsLines;
     public string AsFullText;
+    public FileInfo Info { get; set; }
 
     public string FileName;
 
     public FileContents(Folder parent, string fileName, bool fetchData = true) {
         FileName = fileName;
         Parent = parent;
+        Info = new FileInfo(Parent.FolderPath + "/" + FileName);
 
         if (fetchData)
             FetchData();
