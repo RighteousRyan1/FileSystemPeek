@@ -60,7 +60,8 @@ public class Client {
                 if (sentSFolder.Files.Length > 0) {
                     Console.WriteLine("Files:");
                     for (int i = 0; i < sentSFolder.Files.Length; i++) {
-                        Console.WriteLine("\t" + Path.GetFileName(sentSFolder.Files[i].FileName));
+                        var suff = Utils.SizeSuffix(sentSFolder.Files[i].Size, 2);
+                        Console.WriteLine("\t" + Path.GetFileName(sentSFolder.Files[i].FileName) + "(" + suff + ")");
                     }
                 }
 
@@ -94,7 +95,8 @@ public class Client {
                 if (sentFolder.Files.Length > 0) {
                     Console.WriteLine("Files:");
                     for (int i = 0; i < sentFolder.Files.Length; i++) {
-                        Console.WriteLine("\t" + Path.GetFileName(sentFolder.Files[i].FileName));
+                        var suff = Utils.SizeSuffix(sentFolder.Files[i].Size, 2);
+                        Console.WriteLine("\t" + Path.GetFileName(sentFolder.Files[i].FileName) + "(" + suff + ")");
                     }
                 }
 

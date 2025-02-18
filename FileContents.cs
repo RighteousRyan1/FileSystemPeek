@@ -9,12 +9,15 @@ public class FileContents {
     public string AsFullText;
     public FileInfo Info { get; set; }
 
+    public long Size;
+
     public string FileName;
 
     public FileContents(Folder parent, string fileName, bool fetchData = true) {
         FileName = fileName;
         Parent = parent;
         Info = new FileInfo(Parent.FolderPath + "/" + FileName);
+        Size = Info.Length;
 
         if (fetchData)
             FetchData();
@@ -27,5 +30,5 @@ public class FileContents {
         AsFullText = File.ReadAllText(Parent.FolderPath + "/" + FileName);
         IsDataFetched = true;
     }
-    public override string ToString() => $"{FileName}";
+    public override string ToString() => $"{FileName}, {Utils.SizeSuffix(Info.Length, 2)}";
 }

@@ -59,17 +59,16 @@ public class FileSynchronizer {
         // TODO: get file fetching working (test first tho)
         var runLoop = true;
         while (runLoop) {
+            Console.WriteLine("List of commands and their subcommands");
+            Console.WriteLine("help (-dl)");
+            Console.WriteLine("mf (-u <folder>, -d)");
+            Console.WriteLine("reqsfolder <sfolder>");
+            Console.WriteLine("quit");
             try {
                 var cmdArgs = Console.ReadLine()!.Split(' ');
 
                 var cmd = cmdArgs[0];
                 var subcmd = cmdArgs[1];
-
-                Console.WriteLine("List of commands and their subcommands");
-                Console.WriteLine("help (-dl)");
-                Console.WriteLine("mf (-u <folder>, -d)");
-                Console.WriteLine("reqsfolder <sfolder>");
-                Console.WriteLine("quit");
 
                 switch (cmd) {
                     case "help":
@@ -94,7 +93,7 @@ public class FileSynchronizer {
                             // "up"
                             case "-u":
                             tryAgain:
-                                var folderToGoTo = cmdArgs[2];
+                                var folderToGoTo = string.Join(' ', cmdArgs[2..]);
 
                                 bool success = false;
 
