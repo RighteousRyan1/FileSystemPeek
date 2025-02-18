@@ -37,7 +37,8 @@ public class Server {
             }
             netListener.PeerConnectedEvent += peer => {
                 //if (peer != FileSynchronizer.client.peer)
-                    //Console.WriteLine("A PC has connected to the server..");
+                //Console.WriteLine("A PC has connected to the server..");
+                Packet.SendString(peer, $"'{Environment.MachineName} has connected.");
             };
         };
     }
