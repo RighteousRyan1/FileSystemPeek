@@ -106,7 +106,7 @@ public static class Utils {
             lines[i] = reader.GetString();
         return lines;
     }
-
+    // non-netcode
     public static readonly string[] SizeSuffixes =
                    { "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
     public static string SizeSuffix(long value, int decimalPlaces = 1) {
@@ -131,5 +131,20 @@ public static class Utils {
         return string.Format("{0:n" + (mag > 0 ? decimalPlaces : 0) + "} {1}",
             adjustedSize,
             SizeSuffixes[mag]);
+    }
+
+    public static string StopwatchFormat(this TimeSpan span) {
+        string hours;
+        if (span.Hours >= 10 && span.Hours < 100)
+            hours = $"0{span.Hours}";
+        else if (span.Hours < 10)
+            hours = $"00{span.Hours}";
+        else
+            hours = $"{span.Hours}";
+        string mins = span.Minutes < 10 ? $"0{span.Minutes}" : $"{span.Minutes}";
+        string secs = span.Seconds < 10 ? $"0{span.Seconds}" : $"{span.Seconds}";
+        int millisecs = span.Milliseconds;
+
+        return $"{hours}:{mins}:{secs}:{millisecs}";
     }
 }

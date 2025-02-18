@@ -93,12 +93,13 @@ public class Client {
                     // percent done with DL
                     var percent = reader.GetFloat();
                     FileSynchronizer.PercentFetched = percent;
-                    FileSynchronizer.UpdateFileFetch();
                 }
                 else {
                     FileSynchronizer.LastFetchedFileBytes = byteList.ToArray();
-                    FileSynchronizer.FinalizeFileFetch();
+                    // subfolder fetching will be an entirely new condom on the dick of progress
+                    FileSynchronizer.PercentFetched = 1f;
                 }
+                FileSynchronizer.UpdateFileFetch();
                 break;
             case Packet.REQ_FOLDER:
                 var path = reader.GetString();

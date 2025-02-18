@@ -2,10 +2,14 @@
 using LiteNetLib.Utils;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using System.Formats.Tar;
 
 namespace FileSynchronizer;
 public class FileSynchronizer {
     public static float PercentFetched;
+    public static int CLeft;
+    public static int CTop;
+
     public static Folder FolderOnOtherSystem;
 
     public static FileContents LastFetchedFile;
@@ -15,6 +19,14 @@ public class FileSynchronizer {
     public static Server server;
 
     public static bool runLoop;
+    public static bool startDl = true;
+    public static bool isFetchingFolder;
+
+    // a whole shitstorm going on with this one soon lol.
+    public static int curFolderDl;
+    public static int curFileDl;
+
+    public static Stopwatch folderDlStopwatch = new();
     static void Main() {
         var hasIpFolder = File.Exists("ip.txt");
         string ip;
@@ -92,7 +104,7 @@ public class FileSynchronizer {
             var cmdArgs = command.Split(' ');
 
             var cmd = cmdArgs[0];
-            var subcmd = cmdArgs[1];
+            var subcmd = cmdArgs.Length > 1 ? cmdArgs[1] : string.Empty;
 
             switch (cmd) {
                 case "help":
@@ -166,13 +178,13 @@ public class FileSynchronizer {
                             break;
                     }
                     break;
-                case "reqfile":
+                case "dlfile":
                     var fileWeWant = string.Join(' ', cmdArgs[1..]);
 
                     bool fileSuccess = false;
 
                     if (FolderOnOtherSystem is null || FolderOnOtherSystem.Files is null) {
-                        Console.WriteLine("Cannot request file as there is no folder loaded from the other system.");
+                        Console.WriteLine("Cannot download file as there is no folder loaded from the other system.");
                         break;
                     }
 
@@ -191,6 +203,32 @@ public class FileSynchronizer {
                     if (!fileSuccess)
                         Console.WriteLine($"There is no file with name '{fileWeWant}' within the current folder.");
                     break;
+                // "download folder -all"
+                // -a indicates that it should also download subfolders
+                case "dlfolder":
+                    if (FolderOnOtherSystem is null || FolderOnOtherSystem.Files is null) {
+                        Console.WriteLine("Cannot download folder as there is no folder loaded from the other system.");
+                        break;
+                    }
+                    if (FolderOnOtherSystem.Files.Length == 0) {
+                        Console.WriteLine("Cannot download this folder as it contains no files.");
+                        break;
+                    }
+
+                    curFileDl = 0;
+
+                    Directory.CreateDirectory(FolderOnOtherSystem.FolderName);
+                    isFetchingFolder = true;
+
+                    LastFetchedFile = FolderOnOtherSystem.Files[curFileDl];
+
+                    folderDlStopwatch.Restart();
+                    // fetch the first one, FinalizeFileFetch will fetch sequential ones in ascending order.
+                    Packet.RequestFile(client.netPeer!, FolderOnOtherSystem.Files[curFileDl].FilePath);
+                    break;
+                case "clear":
+                    Console.Clear();
+                    break;
                 case "quit":
                     runLoop = false;
                     break;
@@ -204,13 +242,60 @@ public class FileSynchronizer {
         }
     }
     
-    public static void FinalizeFileFetch() {
-        Console.WriteLine($"Done! Saved to 'FileSynchronizer/{LastFetchedFile.FileName}'");
-        File.WriteAllBytes(LastFetchedFile.FileName, LastFetchedFileBytes);
+    public static void FinalizeFileFetch(bool isFolderFetch, bool fetchSubfolders = false) {
+        CLeft = Console.CursorLeft;
+        CTop = Console.CursorTop;
+        Console.SetCursorPosition(CLeft, CTop);
+
+        if (isFolderFetch) {
+            if (curFileDl == FolderOnOtherSystem.Files.Length - 1) {
+                if (!fetchSubfolders) {
+                    Console.WriteLine($"Folder done! Time elapsed: {folderDlStopwatch.Elapsed.StopwatchFormat()}ms");
+                    Console.WriteLine($"All contents saved inside '{nameof(FileSynchronizer)}/{FolderOnOtherSystem.FolderName}'");
+                    isFetchingFolder = false;
+                    folderDlStopwatch.Stop();
+                }
+                else {
+                    // do the zaza.
+                    Console.WriteLine($"Folder {curFolderDl} done.");
+                }
+            }
+            // if we're just incrementing
+            else {
+                curFileDl++;
+                LastFetchedFile = FolderOnOtherSystem.Files[curFileDl];
+                File.WriteAllBytes(Path.Combine(FolderOnOtherSystem.FolderName, LastFetchedFile.FileName), LastFetchedFileBytes);
+                //Console.WriteLine($"'{LastFetchedFile.FileName}'... Done");
+                Packet.RequestFile(client.netPeer!, LastFetchedFile.FilePath);
+            }
+        } 
+        // just fetching a singular file.
+        else {
+            Console.WriteLine($"Done! Saved to '{nameof(FileSynchronizer)}/{LastFetchedFile.FileName}'");
+            File.WriteAllBytes(LastFetchedFile.FileName, LastFetchedFileBytes);
+        }
         LastFetchedFileBytes = [];
-        PercentFetched = 1f;
+        Client.byteList = [];
+        startDl = true;
+        Console.CursorVisible = true;
     }
+
     public static void UpdateFileFetch() {
-        Console.WriteLine($"'{LastFetchedFile.FileName}': {PercentFetched * 100:0.00}%");
+        if (startDl) {
+            Console.Write($"'{LastFetchedFile.FileName}'... ");
+            CLeft = Console.CursorLeft;
+            CTop = Console.CursorTop;
+            Console.CursorVisible = false;
+            startDl = false;
+        }
+        Console.SetCursorPosition(CLeft, CTop);
+
+        var finished = PercentFetched == 1f;
+        var str = finished ? "Done" : $"{PercentFetched * 100:0.00}%";
+
+        Console.WriteLine(str);
+
+        if (finished)
+            FinalizeFileFetch(isFetchingFolder);
     }
 }
