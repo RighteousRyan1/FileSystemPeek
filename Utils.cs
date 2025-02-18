@@ -40,6 +40,7 @@ public static class Utils {
         var folderPath = reader.GetString();
         var folder = new Folder() {
             FolderPath = folderPath,
+            FolderName = Path.GetFileName(folderPath)
         };
 
         var numFiles = reader.GetInt();
@@ -58,6 +59,7 @@ public static class Utils {
             if (isSubFolderSquared) {
                 folder.SubFolders[i] = new() {
                     FolderPath = reader.GetString(),
+                    FolderName = Path.GetFileName(folderPath)
                 };
             }
             else {
@@ -69,7 +71,7 @@ public static class Utils {
     }
     public static void Serialize(this NetDataWriter writer, FileContents file) {
         writer.Put(file.Parent.FolderPath);
-        writer.Put(file.FileName);
+        writer.Put(file.FilePath);
         writer.Put(file.Size);
     }
     public static FileContents DeserializeFile(this NetDataReader reader) {
@@ -81,7 +83,9 @@ public static class Utils {
         file.Parent = new Folder() {
             FolderPath = reader.GetString(),
         };
-        file.FileName = reader.GetString();
+        file.Parent.FolderName = Path.GetFileName(file.Parent.FolderPath);
+        file.FilePath = reader.GetString();
+        file.FileName = Path.GetFileName(file.FilePath);
         file.Size = reader.GetLong();
         //file.Info = new(file.Parent.FolderPath + "/" + file.FileName);
 

@@ -54,7 +54,9 @@ public static class Packet {
     public static void SendFile(NetPeer peer, string filePath) {
         var info = new FileInfo(filePath);
 
-        var slices = info.Length / MAX_PACKET_CAPACITY;
+        var lengthLeft = info.Length;
+
+        var slices = (lengthLeft / MAX_PACKET_CAPACITY) + 1;
 
         var bytes = File.ReadAllBytes(filePath);
 
@@ -64,10 +66,24 @@ public static class Packet {
             writer.Put(SEND_FILE);
 
             // put bytes in our current section only
-            writer.Put(bytes[(i * MAX_PACKET_CAPACITY)..(i * (MAX_PACKET_CAPACITY + 1))]);
+
+            int start = i * MAX_PACKET_CAPACITY;
+            int num = lengthLeft > MAX_PACKET_CAPACITY ? MAX_PACKET_CAPACITY : (int)lengthLeft;
+
+            writer.Put(num);
+            writer.Put(bytes[start..(start + num)]);
 
             // terminate
-            writer.Put(i == slices - 1);
+            var doTerminate = i == slices - 1;
+            writer.Put(doTerminate);
+
+            // should make finalization sent not try and send 10k for something less than 10k?
+            lengthLeft -= num;
+
+            if (!doTerminate) {
+                // % download complete
+                writer.Put(1f - ((float)lengthLeft / info.Length));
+            }
 
             // tbh could be really slow.
             peer.Send(writer, DeliveryMethod.ReliableOrdered);

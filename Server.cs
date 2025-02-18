@@ -38,7 +38,7 @@ public class Server {
             netListener.PeerConnectedEvent += peer => {
                 //if (peer != FileSynchronizer.client.peer)
                 //Console.WriteLine("A PC has connected to the server..");
-                Packet.SendString(peer, $"'{Environment.MachineName}' has connected.");
+
             };
         };
     }
@@ -77,14 +77,24 @@ public class Server {
                 netManager.SendToAll(writer, deliveryMethod, peer);
                 break;
             case Packet.SEND_FILE:
-                byte[] bytes = [];
-                reader.GetBytes(bytes, Packet.MAX_PACKET_CAPACITY);
+
+                // read at what the client sends
+                var len = reader.GetInt();
+                var bytes = new byte[len];
+                reader.GetBytes(bytes, len);
+
+                writer.Put(len);
 
                 writer.Put(bytes);
 
                 bool terminate = reader.GetBool();
 
                 writer.Put(terminate);
+
+                if (!terminate) {
+                    var percent = reader.GetFloat();
+                    writer.Put(percent);
+                }
 
                 netManager.SendToAll(writer, deliveryMethod, peer);
                 break;

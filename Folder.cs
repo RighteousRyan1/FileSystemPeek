@@ -8,17 +8,19 @@ namespace FileSynchronizer;
 
 #pragma warning disable CS8618
 public class Folder {
+    public string FolderName { get; set; }
     public string FolderPath { get; set; }
     public FileContents[] Files { get; set; }
     public Folder[] SubFolders { get; set; }
     public Folder(string path) {
         FolderPath = path;
+        FolderName = Path.GetFileName(path);
         SubFolders = [];
 
         var files = Directory.GetFiles(path);
         Files = new FileContents[files.Length];
         for (int i = 0; i < files.Length; i++)
-            Files[i] = new FileContents(this, Path.GetFileName(files[i]), false);
+            Files[i] = new FileContents(this, files[i], false);
 
         // happens recursively
         var folders = Directory.GetDirectories(path);
@@ -36,7 +38,7 @@ public class Folder {
     }
     public override string ToString() {
         StringBuilder s = new();
-        s.Append(FolderPath + ", ");
+        s.Append($"\"{FolderName}\" | ");
         s.Append(Files.Length + " file(s), ");
         if (SubFolders.Length == 0)
             s.Append("No Folders");

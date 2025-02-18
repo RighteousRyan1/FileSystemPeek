@@ -11,10 +11,12 @@ public class FileContents {
 
     public long Size;
 
+    public string FilePath;
     public string FileName;
 
-    public FileContents(Folder parent, string fileName, bool fetchData = true) {
-        FileName = fileName;
+    public FileContents(Folder parent, string filePath, bool fetchData = true) {
+        FilePath = filePath;
+        FileName = Path.GetFileName(filePath);
         Parent = parent;
         Info = new FileInfo(Parent.FolderPath + "/" + FileName);
         Size = Info.Length;
