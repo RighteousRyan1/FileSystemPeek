@@ -3,7 +3,7 @@ using LiteNetLib.Utils;
 
 namespace FileSynchronizer; 
 public static class Packet {
-    public const ushort MAX_PACKET_CAPACITY = 10000;
+    public const int MAX_PACKET_CAPACITY = 25000;
 
     public const int SEND_STR = -1;
     public const int REQ_S_FOLDER = 0;
@@ -67,8 +67,8 @@ public static class Packet {
 
             // put bytes in our current section only
 
-            int start = i * MAX_PACKET_CAPACITY;
-            int num = lengthLeft > MAX_PACKET_CAPACITY ? MAX_PACKET_CAPACITY : (int)lengthLeft;
+            var start = i * MAX_PACKET_CAPACITY;
+            var num = lengthLeft > MAX_PACKET_CAPACITY ? MAX_PACKET_CAPACITY : (int)lengthLeft;
 
             writer.Put(num);
             writer.Put(bytes[start..(start + num)]);

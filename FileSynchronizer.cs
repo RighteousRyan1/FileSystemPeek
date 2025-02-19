@@ -5,6 +5,8 @@ using System.Diagnostics.Metrics;
 using System.Formats.Tar;
 
 namespace FileSynchronizer;
+
+// TEST: C:\Program Files (x86)\Steam\steamapps\common\BeamNG.drive\content\vehicles
 public class FileSynchronizer {
     public static float PercentFetched;
     public static int CLeft;
@@ -58,7 +60,7 @@ public class FileSynchronizer {
         // Thread.Sleep(500);
 
         if (client.netPeer is not null) {
-            Console.WriteLine(isHost ? "Server started." : "Connection successful.");
+            Utils.Log(isHost ? "Server started." : "Connection successful.");
             Packet.SendString(client.netPeer, $"'{Environment.MachineName}' has connected.");
         }
 
@@ -192,7 +194,7 @@ public class FileSynchronizer {
                         var curFile = FolderOnOtherSystem.Files[i];
                         var fileName = curFile.FileName;
                         if (fileName == fileWeWant) {
-                            Console.WriteLine($"Requesting file '{fileName}'");
+                            Utils.Log($"Requesting file '{fileName}'");
                             Packet.RequestFile(client.netPeer!, curFile.FilePath);
                             LastFetchedFile = curFile;
                             fileSuccess = true;
@@ -243,35 +245,32 @@ public class FileSynchronizer {
     }
     
     public static void FinalizeFileFetch(bool isFolderFetch, bool fetchSubfolders = false) {
-        CLeft = Console.CursorLeft;
-        CTop = Console.CursorTop;
-        Console.SetCursorPosition(CLeft, CTop);
-
         if (isFolderFetch) {
             if (curFileDl == FolderOnOtherSystem.Files.Length - 1) {
                 if (!fetchSubfolders) {
-                    Console.WriteLine($"Folder done! Time elapsed: {folderDlStopwatch.Elapsed.StopwatchFormat()}ms");
-                    Console.WriteLine($"All contents saved inside '{nameof(FileSynchronizer)}/{FolderOnOtherSystem.FolderName}'");
+                    Utils.Log($"Folder done! Time elapsed: {folderDlStopwatch.Elapsed.StopwatchFormat()}ms");
+                    Utils.Log($"All contents saved inside '{nameof(FileSynchronizer)}/{FolderOnOtherSystem.FolderName}'");
                     isFetchingFolder = false;
                     folderDlStopwatch.Stop();
                 }
                 else {
                     // do the zaza.
-                    Console.WriteLine($"Folder {curFolderDl} done.");
+                    Utils.Log($"Folder {curFolderDl} done.");
                 }
             }
             // if we're just incrementing
             else {
                 curFileDl++;
-                LastFetchedFile = FolderOnOtherSystem.Files[curFileDl];
                 File.WriteAllBytes(Path.Combine(FolderOnOtherSystem.FolderName, LastFetchedFile.FileName), LastFetchedFileBytes);
+                // ensure this is next otherwise file misnaming!!
+                LastFetchedFile = FolderOnOtherSystem.Files[curFileDl];
                 //Console.WriteLine($"'{LastFetchedFile.FileName}'... Done");
                 Packet.RequestFile(client.netPeer!, LastFetchedFile.FilePath);
             }
         } 
         // just fetching a singular file.
         else {
-            Console.WriteLine($"Done! Saved to '{nameof(FileSynchronizer)}/{LastFetchedFile.FileName}'");
+            Utils.Log($"Done! Saved to '{nameof(FileSynchronizer)}/{LastFetchedFile.FileName}'");
             File.WriteAllBytes(LastFetchedFile.FileName, LastFetchedFileBytes);
         }
         LastFetchedFileBytes = [];
@@ -288,10 +287,14 @@ public class FileSynchronizer {
             Console.CursorVisible = false;
             startDl = false;
         }
-        Console.SetCursorPosition(CLeft, CTop);
 
         var finished = PercentFetched == 1f;
-        var str = finished ? "Done" : $"{PercentFetched * 100:0.00}%";
+        var totalBytes = Utils.SizeSuffix(LastFetchedFile.Size, 2);
+        var bytesDownloaded = finished ? totalBytes : Utils.SizeSuffix(LastFetchedFile.Size, 2, PercentFetched);
+
+        var str = finished ? "Done!" : $"{PercentFetched * 100:0.00}% ({bytesDownloaded} / {totalBytes})";
+
+        Console.SetCursorPosition(CLeft, CTop);
 
         Console.WriteLine(str);
 

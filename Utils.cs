@@ -1,6 +1,8 @@
 ﻿using LiteNetLib.Utils;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,7 +13,9 @@ namespace FileSynchronizer;
 public static class Utils {
 
     public static string[] AllSpecialFolders = Enum.GetNames<Environment.SpecialFolder>();
-    public static void Serialize(this NetDataWriter writer, Folder folder, bool isSubFolderSquared = false) {
+
+    // "deepScan" indicates that we will be scanning ALL subfolders and ALL subfolders of subfolders... etc
+    public static void Serialize(this NetDataWriter writer, Folder folder, bool deepScan = false) {
         // var temp = folder.DeepCopy();
         writer.Put(folder.FolderPath);
         // don't bother writing "SubdirsScanned" since we aren't doing that part here.
@@ -27,12 +31,14 @@ public static class Utils {
         var numSubs = folder.SubFolders.Length;
         writer.Put(numSubs);
         for (int i = 0; i < numSubs; i++) {
-            writer.Put(isSubFolderSquared);
+            writer.Put(deepScan);
 
             // if we are currently serializing a subfolder, don't serialize a sub-subfolder
-            if (isSubFolderSquared)
+            if (deepScan)
+                // this is literally never called. wtf.
                 writer.Put(folder.SubFolders[i].FolderPath);
             else
+                // via our current code, this is all that is called
                 writer.Serialize(folder.SubFolders[i]);
         }
     }
@@ -109,26 +115,25 @@ public static class Utils {
     // non-netcode
     public static readonly string[] SizeSuffixes =
                    { "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
-    public static string SizeSuffix(long value, int decimalPlaces = 1) {
+    public static string SizeSuffix(long value, int decimalPlaces = 1, float adjustedMultiplier = 1f) {
         if (decimalPlaces < 0) { throw new ArgumentOutOfRangeException("decimalPlaces"); }
         if (value < 0) { return "-" + SizeSuffix(-value, decimalPlaces); }
         if (value == 0) { return string.Format("{0:n" + decimalPlaces + "} bytes", 0); }
 
         // mag is 0 for bytes, 1 for KB, 2, for MB, etc.
-        int mag = (int)Math.Log(value, 1024);
+        int mag = (int)MathF.Log(value, 1024);
 
         // 1L << (mag * 10) == 2 ^ (10 * mag) 
         // [i.e. the number of bytes in the unit corresponding to mag]
-        decimal adjustedSize = (decimal)value / (1L << (mag * 10));
+        float adjustedSize = (float)value / (1L << (mag * 10)) * adjustedMultiplier;
 
         // make adjustment when the value is large enough that
         // it would round up to 1000 or more
         if (Math.Round(adjustedSize, decimalPlaces) >= 1000) {
             mag += 1;
-            adjustedSize /= 1024;
+            adjustedSize /= 1024 * adjustedMultiplier;
         }
-
-        return string.Format("{0:n" + (mag > 0 ? decimalPlaces : 0) + "} {1}",
+        return string.Format("{0:n" + (decimalPlaces) + "} {1}",
             adjustedSize,
             SizeSuffixes[mag]);
     }
@@ -146,5 +151,13 @@ public static class Utils {
         int millisecs = span.Milliseconds;
 
         return $"{hours}:{mins}:{secs}:{millisecs}";
+    }
+
+    public static void Log(string s) {
+        StringBuilder stringBuilder = new();
+        stringBuilder
+                .Append('[').Append(DateTime.Now.ToString(CultureInfo.InvariantCulture)).Append("] ")
+                .Append(s);
+        Console.WriteLine(stringBuilder);
     }
 }

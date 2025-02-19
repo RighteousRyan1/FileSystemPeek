@@ -32,7 +32,7 @@ public class Client {
     }
 
     private void Goodbye(NetPeer peer, DisconnectInfo disconnectInfo) {
-        Console.WriteLine($"Server stopped responding: {disconnectInfo.Reason}");
+        Utils.Log($"Server stopped responding: {disconnectInfo.Reason}");
     }
 
     public static List<byte> byteList = [];
@@ -49,7 +49,7 @@ public class Client {
             case Packet.REQ_S_FOLDER:
                 var specialPath = (Environment.SpecialFolder)reader.GetByte();
 
-                Console.WriteLine($"The other PC is requesting '{specialPath}'...");
+                Utils.Log($"The other PC is requesting '{specialPath}'...");
 
                 Packet.SendSFolder(netPeer, specialPath);
                 break;
@@ -75,7 +75,7 @@ public class Client {
             case Packet.REQ_FILE:
                 var file = reader.GetString();
 
-                Console.WriteLine($"The other PC is requesting '{file}'...");
+                Utils.Log($"The other PC is requesting '{file}'...");
 
                 Packet.SendFile(netPeer, file);
                 break;
@@ -104,7 +104,7 @@ public class Client {
             case Packet.REQ_FOLDER:
                 var path = reader.GetString();
 
-                Console.WriteLine($"The other PC is requesting '{path}'...");
+                Utils.Log($"The other PC is requesting '{path}'...");
 
                 Packet.SendFolder(netPeer, path);
                 break;
