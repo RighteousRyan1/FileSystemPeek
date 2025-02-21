@@ -3,7 +3,7 @@ using LiteNetLib.Utils;
 
 namespace FileSynchronizer; 
 public static class Packet {
-    public const int MAX_PACKET_CAPACITY = 25000;
+    public const int MAX_PACKET_CAPACITY = 12500;
 
     public const int SEND_STR = -1;
     public const int REQ_S_FOLDER = 0;
