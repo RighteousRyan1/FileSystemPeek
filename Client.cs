@@ -55,7 +55,7 @@ public class Client {
                 break;
             case Packet.SEND_S_FOLDER:
                 var sentSFolder = reader.DeserializeFolder();
-                FileSynchronizer.FolderOnOtherSystem = sentSFolder;
+                FileSystemPeek.FolderOnOtherSystem = sentSFolder;
 
                 Console.WriteLine(sentSFolder);
 
@@ -92,14 +92,14 @@ public class Client {
                 if (!terminate) {
                     // percent done with DL
                     var percent = reader.GetFloat();
-                    FileSynchronizer.PercentFetched = percent;
+                    FileSystemPeek.PercentFetched = percent;
                 }
                 else {
-                    FileSynchronizer.LastFetchedFileBytes = byteList.ToArray();
+                    FileSystemPeek.LastFetchedFileBytes = byteList.ToArray();
                     // subfolder fetching will be an entirely new condom on the dick of progress
-                    FileSynchronizer.PercentFetched = 1f;
+                    FileSystemPeek.PercentFetched = 1f;
                 }
-                FileSynchronizer.UpdateFileFetch();
+                FileSystemPeek.UpdateFileFetch();
                 break;
             case Packet.REQ_FOLDER:
                 var path = reader.GetString();
@@ -110,7 +110,7 @@ public class Client {
                 break;
             case Packet.SEND_FOLDER:
                 var sentFolder = reader.DeserializeFolder();
-                FileSynchronizer.FolderOnOtherSystem = sentFolder;
+                FileSystemPeek.FolderOnOtherSystem = sentFolder;
 
                 Console.WriteLine(sentFolder);
 

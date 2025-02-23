@@ -1,13 +1,8 @@
-﻿using LiteNetLib;
-using LiteNetLib.Utils;
-using System.Diagnostics;
-using System.Diagnostics.Metrics;
-using System.Formats.Tar;
+﻿using System.Diagnostics;
 
 namespace FileSynchronizer;
 
-// TEST: C:\Program Files (x86)\Steam\steamapps\common\BeamNG.drive\content\vehicles
-public class FileSynchronizer {
+public class FileSystemPeek {
     public static float PercentFetched;
     public static int CLeft;
     public static int CTop;
@@ -249,7 +244,7 @@ public class FileSynchronizer {
             if (curFileDl == FolderOnOtherSystem.Files.Length - 1) {
                 if (!fetchSubfolders) {
                     Utils.Log($"Folder done! Time elapsed: {folderDlStopwatch.Elapsed.StopwatchFormat()}ms");
-                    Utils.Log($"All contents saved inside '{nameof(FileSynchronizer)}/{FolderOnOtherSystem.FolderName}'");
+                    Utils.Log($"All contents saved inside '{nameof(FileSystemPeek)}/{FolderOnOtherSystem.FolderName}'");
                     isFetchingFolder = false;
                     folderDlStopwatch.Stop();
                 }
@@ -270,7 +265,7 @@ public class FileSynchronizer {
         } 
         // just fetching a singular file.
         else {
-            Utils.Log($"Done! Saved to '{nameof(FileSynchronizer)}/{LastFetchedFile.FileName}'");
+            Utils.Log($"Done! Saved to '{nameof(FileSystemPeek)}/{LastFetchedFile.FileName}'");
             File.WriteAllBytes(LastFetchedFile.FileName, LastFetchedFileBytes);
         }
         LastFetchedFileBytes = [];
